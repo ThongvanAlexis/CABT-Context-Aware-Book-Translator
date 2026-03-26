@@ -1,0 +1,29 @@
+# General Translation Principle
+ -Everything is translated to French EXCEPT proper nouns. A proper noun within an item, quest, location, creature name, class, skill, etc. stays in English, but the rest of the name is translated.
+  - Examples: King Garithar's Last Resort → Dernier Recours du Roi Garithar ("Garithar" stays, rest translated)
+  - Sarissa the Blue → Sarissa la Bleue ("Sarissa" stays, "the Blue" translated)
+  - Underworld Tree → Arbre du Monde Souterrain (no proper noun, fully translated)
+  - Sagada → Sagada (proper noun, kept as-is)
+  - Earthblood Online → Earthblood Online (game brand name, kept as-is)
+  - Keep weapon/item proper names in English (Razorback, etc.), but as for the others "Blue Razorback" becomes "Razorback Bleue"
+
+# Gaming Slang
+ - Keep gaming slang in English (buff, debuff, XP, HP, mana, MP, aggro, jack in, mob, proc, cooldown, crowd control/CC, tank, threat, min-max, kiting, grinding, nerf, hotfix, loot, update, noob)
+ - Tranlate those terms : level, class, dungeon, skill, quest, ability point, ability, tutorial, safe zone, accolate (Haut Fait), User, Host, Status
+
+# Speech Register (tu/vous)
+ - Always use "vous" when addressing gods, kings, nobles, or authority figures (even if allies) -- UNLESS the relationship is explicitly very friendly/intimate
+ - friends and ally use "tu"
+ - Strangers and first encounters use "vous"
+ - Guild allies use "tu" once friendly relationship is established
+
+# Onomatopoeia and Sound Effects
+ - Keep sound effects in English (ding!, crack, boom, etc.)
+
+# Pop Culture References
+ - Keep original references untranslated -- French readers will recognize them (Star Trek, The Matrix, M&Ms, The Rock)
+ - Adapt syntax to French word order: "Star Trek's Kobayashi Maru" → "le Kobayashi Maru de Star Trek"
+
+# Profanity
+ - Translate profanity naturally into equivalent French profanity (merde, putain, bordel, etc.)
+ - French being more colorful, adapt to make profanity more punchy when appropriate -- match or exceed the energy of the original

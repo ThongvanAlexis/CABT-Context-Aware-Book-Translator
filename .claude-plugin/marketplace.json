@@ -1,0 +1,13 @@
+{
+  "name": "cabt",
+  "owner": {
+    "name": "CABT"
+  },
+  "plugins": [
+    {
+      "name": "cabt",
+      "source": "./cabt-cc",
+      "description": "Context Aware Book Translator - translate EPUB books with genre-aware glossary consistency"
+    }
+  ]
+}

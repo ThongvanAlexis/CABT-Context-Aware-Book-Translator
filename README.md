@@ -57,15 +57,29 @@ pip install ebooklib lxml tiktoken
    ```
 
 3. **Register the plugin in Claude Code:**
-   
-   Run these two commands inside Claude Code, replacing the path with wherever you cloned the repo:
-   
+
+   This requires two separate Claude Code sessions. Replace the path with wherever you cloned the repo.
+
+   **Session 1** -- register the plugin source:
    ```
    /plugin marketplace add /path/to/CABT-Context-Aware-Book-Translator
-   /plugin install cabt@cabt
+   /reload-plugins
+   exit
    ```
 
-4. **Restart Claude Code** to pick up the new plugin.
+   **Session 2** -- install the plugin:
+   ```
+   /plugin install cabt@cabt
+   /reload-plugins
+   exit
+   ```
+
+   **Session 3** -- use the plugin:
+   ```
+   /prepare-book path/to/book.epub
+   ```
+
+   > **Note:** Each step must be followed by a full restart of Claude Code. The plugin won't be picked up if you try to do both in a single session.
 
 ## Workflow -- The Three Commands
 

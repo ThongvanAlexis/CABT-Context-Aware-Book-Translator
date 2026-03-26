@@ -144,6 +144,38 @@ def update_opf_language(opf_bytes, target_language):
     )
 
 
+def update_opf_title(opf_bytes, suffix="[ai_translated]"):
+    """
+    Append a suffix to dc:title in OPF XML content.
+
+    Finds the first dc:title element and appends the suffix if not already
+    present. Preserves all other OPF content exactly.
+
+    Args:
+        opf_bytes: OPF file content as bytes.
+        suffix: String to append to the title (default: "[ai_translated]").
+
+    Returns:
+        Modified OPF content as bytes with XML declaration.
+    """
+    parser = etree.XMLParser(remove_blank_text=False)
+    root = etree.fromstring(opf_bytes, parser)
+
+    title_elements = root.findall(".//dc:title", NAMESPACES)
+
+    if title_elements:
+        title_elem = title_elements[0]
+        if title_elem.text and suffix not in title_elem.text:
+            title_elem.text = f"{title_elem.text} {suffix}"
+
+    return etree.tostring(
+        root,
+        xml_declaration=True,
+        encoding="UTF-8",
+        pretty_print=False,
+    )
+
+
 def _build_chapter_mapping(metadata, chapter_dir):
     """
     Build a mapping from original EPUB filenames to chapter files on disk.
@@ -180,7 +212,7 @@ def _build_chapter_mapping(metadata, chapter_dir):
 
 
 def rebuild_epub(original_epub_path, chapter_dir, output_epub_path,
-                 metadata=None, target_language=None):
+                 metadata=None, target_language=None, tag_title=False):
     """
     Rebuild an EPUB from modified chapter files.
 
@@ -197,6 +229,7 @@ def rebuild_epub(original_epub_path, chapter_dir, output_epub_path,
                   If None, mapping is built by scanning chapter_dir.
         target_language: Target language code (e.g., "fr"). If None,
                          dc:language is left unchanged (round-trip mode).
+        tag_title: If True, append "[ai_translated]" to dc:title.
     """
     # Build chapter mapping: original_filename -> path on disk
     chapter_mapping = _build_chapter_mapping(metadata, chapter_dir)
@@ -226,12 +259,15 @@ def rebuild_epub(original_epub_path, chapter_dir, output_epub_path,
             if filename == "mimetype":
                 continue
 
-            # Case: OPF file with language update
-            if filename == opf_path and target_language is not None:
+            # Case: OPF file with metadata updates
+            if filename == opf_path and (target_language is not None or tag_title):
                 opf_bytes = zin.read(filename)
-                modified_opf = update_opf_language(opf_bytes, target_language)
+                if target_language is not None:
+                    opf_bytes = update_opf_language(opf_bytes, target_language)
+                if tag_title:
+                    opf_bytes = update_opf_title(opf_bytes)
                 zout.writestr(
-                    filename, modified_opf,
+                    filename, opf_bytes,
                     compress_type=zipfile.ZIP_DEFLATED,
                 )
                 continue
@@ -427,13 +463,13 @@ def main():
     print(f"  Output: {args.output_epub_path}")
     if args.target_language:
         print(f"  Target language: {args.target_language}")
-
     rebuild_epub(
         args.original_epub_path,
         args.chapter_dir,
         args.output_epub_path,
         metadata=metadata,
         target_language=args.target_language,
+        tag_title=True,
     )
 
     print(f"Rebuilt EPUB written to: {args.output_epub_path}")

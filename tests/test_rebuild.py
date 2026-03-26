@@ -226,6 +226,71 @@ class TestRebuildLanguageUpdate:
             f"dc:language should be unchanged ('{orig_lang}'), got '{rebuilt_lang}'"
         )
 
+    def test_rebuild_tags_title_with_ai_translated(self, test_epub_path, tmp_output_dir, tmp_path):
+        """dc:title has [ai_translated] suffix after rebuild."""
+        from extract_epub import extract_epub
+        from rebuild_epub import rebuild_epub, find_opf_path
+
+        metadata = extract_epub(str(test_epub_path), str(tmp_output_dir))
+        chapter_dir = str(tmp_output_dir / "source")
+        output_epub = str(tmp_path / "rebuilt.epub")
+
+        # Get original title
+        opf_path = find_opf_path(str(test_epub_path))
+        with zipfile.ZipFile(str(test_epub_path), "r") as z:
+            opf_orig = z.read(opf_path)
+        ns = {"dc": "http://purl.org/dc/elements/1.1/"}
+        root_orig = etree.fromstring(opf_orig)
+        orig_title = root_orig.findall(".//dc:title", ns)[0].text
+
+        rebuild_epub(
+            str(test_epub_path), chapter_dir, output_epub,
+            metadata=metadata, tag_title=True,
+        )
+
+        # Check title has suffix
+        opf_path_rebuilt = find_opf_path(output_epub)
+        with zipfile.ZipFile(output_epub, "r") as z:
+            opf_rebuilt = z.read(opf_path_rebuilt)
+        root_rebuilt = etree.fromstring(opf_rebuilt)
+        rebuilt_title = root_rebuilt.findall(".//dc:title", ns)[0].text
+        assert rebuilt_title == f"{orig_title} [ai_translated]", (
+            f"dc:title should be '{orig_title} [ai_translated]', got '{rebuilt_title}'"
+        )
+
+    def test_rebuild_no_duplicate_ai_translated_suffix(self, test_epub_path, tmp_output_dir, tmp_path):
+        """Rebuilding twice does not duplicate the [ai_translated] suffix."""
+        from extract_epub import extract_epub
+        from rebuild_epub import rebuild_epub, find_opf_path
+
+        metadata = extract_epub(str(test_epub_path), str(tmp_output_dir))
+        chapter_dir = str(tmp_output_dir / "source")
+        first_epub = str(tmp_path / "first.epub")
+        second_epub = str(tmp_path / "second.epub")
+
+        # First rebuild
+        rebuild_epub(
+            str(test_epub_path), chapter_dir, first_epub,
+            metadata=metadata, tag_title=True,
+        )
+
+        # Second rebuild from the first output
+        rebuild_epub(
+            first_epub, chapter_dir, second_epub,
+            metadata=metadata, tag_title=True,
+        )
+
+        # Check title has suffix only once
+        ns = {"dc": "http://purl.org/dc/elements/1.1/"}
+        opf_path = find_opf_path(second_epub)
+        with zipfile.ZipFile(second_epub, "r") as z:
+            opf_content = z.read(opf_path)
+        root = etree.fromstring(opf_content)
+        rebuilt_title = root.findall(".//dc:title", ns)[0].text
+        assert rebuilt_title.count("[ai_translated]") == 1, (
+            f"Suffix should appear only once, got: '{rebuilt_title}'"
+        )
+
     def test_rebuild_opf_not_hardcoded(self, test_epub_path):
         """find_opf_path reads from container.xml, not hardcoded."""
         from rebuild_epub import find_opf_path

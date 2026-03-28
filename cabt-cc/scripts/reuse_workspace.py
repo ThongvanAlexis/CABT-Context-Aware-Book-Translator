@@ -106,13 +106,20 @@ def reuse_workspace(source_workspace, target_workspace):
         had_rules = True
         imported_files.append("glossary-rules.md")
 
-    # --- translation-style-brief.md: find in output/{lang}/, copy to target root ---
+    # --- translation-style-brief.md: find in output/{lang}/ or workspace root, copy to target root ---
     brief_src = None
     if lang_dir:
-        brief_src = os.path.join(
+        candidate = os.path.join(
             source_workspace, "output", lang_dir, "translation-style-brief.md"
         )
-    if brief_src and os.path.isfile(brief_src):
+        if os.path.isfile(candidate):
+            brief_src = candidate
+    # Fallback: check workspace root (brief may live here from a previous reuse import)
+    if not brief_src:
+        candidate = os.path.join(source_workspace, "translation-style-brief.md")
+        if os.path.isfile(candidate):
+            brief_src = candidate
+    if brief_src:
         with open(brief_src, "r", encoding="utf-8") as f:
             brief_text = f.read()
         brief_dst = os.path.join(target_workspace, "translation-style-brief.md")

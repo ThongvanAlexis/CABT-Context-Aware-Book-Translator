@@ -228,6 +228,39 @@ class TestPartialFiles:
         assert result["had_brief"] is True
         assert (Path(target) / "translation-style-brief.md").exists()
 
+    def test_brief_at_root_fallback(self, tmp_path):
+        """Brief at workspace root (from a previous reuse import) is found and copied."""
+        from reuse_workspace import reuse_workspace
+
+        brief_text = "# Brief\n\nImported from earlier book."
+        # Place brief at source root instead of output/{lang}/
+        source = _make_source_workspace(tmp_path)
+        (source / "translation-style-brief.md").write_text(brief_text, encoding="utf-8")
+        target = _make_target_workspace(tmp_path)
+
+        result = reuse_workspace(str(source), str(target))
+
+        assert result["had_brief"] is True
+        copied = (Path(target) / "translation-style-brief.md").read_text(encoding="utf-8")
+        assert copied == brief_text
+
+    def test_brief_in_output_preferred_over_root(self, tmp_path):
+        """Brief in output/{lang}/ takes priority over one at root."""
+        from reuse_workspace import reuse_workspace
+
+        root_brief = "# Brief at root"
+        output_brief = "# Brief in output dir"
+        source = _make_source_workspace(tmp_path, brief=output_brief)
+        # Also place a different brief at root
+        (source / "translation-style-brief.md").write_text(root_brief, encoding="utf-8")
+        target = _make_target_workspace(tmp_path)
+
+        result = reuse_workspace(str(source), str(target))
+
+        assert result["had_brief"] is True
+        copied = (Path(target) / "translation-style-brief.md").read_text(encoding="utf-8")
+        assert copied == output_brief
+
     def test_no_reusable_files(self, tmp_path):
         """No reusable files present -- all had_* false, no error."""
         from reuse_workspace import reuse_workspace

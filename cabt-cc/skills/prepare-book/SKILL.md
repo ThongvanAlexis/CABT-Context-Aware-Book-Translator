@@ -1,6 +1,6 @@
 ---
 name: prepare-book
-version: 1.2.2
+version: 1.2.3
 description: Interactively set up a translation workspace from an EPUB file
 argument-hint: <path-to-epub>
 allowed-tools: [Read, Write, Bash, Glob, Grep]
@@ -17,7 +17,7 @@ Interactively collect book configuration from the user, extract chapters from an
 Print the version on every run:
 
 ```
-cabt:prepare-book v1.2.2
+cabt:prepare-book v1.2.3
 ```
 
 Then check if `$ARGUMENTS` contains `--version`. If it does, stop here -- do not proceed to Step 1 or any further steps.

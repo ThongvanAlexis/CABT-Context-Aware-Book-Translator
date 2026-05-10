@@ -12,6 +12,7 @@ Usage:
 import argparse
 import json
 import os
+import posixpath
 import re
 import sys
 import zipfile
@@ -21,6 +22,8 @@ from lxml import etree
 
 from ebooklib import epub
 import ebooklib
+
+from rebuild_epub import find_opf_path
 
 
 # Font obfuscation algorithm URIs -- these are NOT DRM
@@ -325,6 +328,13 @@ def extract_epub(epub_path, output_dir):
     source_dir = os.path.join(output_dir, "source")
     os.makedirs(source_dir, exist_ok=True)
 
+    # Resolve OPF base directory. ebooklib normalizes TOC/spine hrefs as
+    # paths relative to the OPF; ZIP entries are absolute from the archive
+    # root. When the OPF lives in a subdirectory (e.g. "OEBPS/content.opf"),
+    # raw ZIP lookups must prepend that directory.
+    opf_path = find_opf_path(epub_path)
+    opf_dir = posixpath.dirname(opf_path)
+
     # Step 6: Extract chapter content from raw ZIP
     chapters_meta = []
     with zipfile.ZipFile(epub_path, "r") as z:
@@ -332,18 +342,23 @@ def extract_epub(epub_path, output_dir):
 
         for i, ch in enumerate(chapters, 1):
             href = ch["href"]
+            zip_path = posixpath.normpath(
+                posixpath.join(opf_dir, href)
+            ) if opf_dir else href
 
             # Read raw content from ZIP (preserves exact XHTML)
-            if href in zip_names:
-                content = z.read(href)
+            if zip_path in zip_names:
+                resolved_name = zip_path
+                content = z.read(zip_path)
             else:
                 # Try case-insensitive match
                 matched = None
                 for name in zip_names:
-                    if name.lower() == href.lower():
+                    if name.lower() == zip_path.lower():
                         matched = name
                         break
                 if matched:
+                    resolved_name = matched
                     content = z.read(matched)
                     ch["detection_notes"] = (
                         (ch["detection_notes"] + "; " if ch["detection_notes"] else "")
@@ -352,7 +367,7 @@ def extract_epub(epub_path, output_dir):
                 else:
                     ch["detection_notes"] = (
                         (ch["detection_notes"] + "; " if ch["detection_notes"] else "")
-                        + f"WARNING: File not found in ZIP: {href}"
+                        + f"WARNING: File not found in ZIP: {zip_path}"
                     )
                     continue
 
@@ -362,10 +377,12 @@ def extract_epub(epub_path, output_dir):
             with open(out_path, "wb") as f:
                 f.write(content)
 
+            # Store the resolved ZIP path as original_filename so
+            # rebuild_epub can match it against ZIP entries.
             chapters_meta.append(
                 {
                     "sequence": i,
-                    "original_filename": ch["original_filename"],
+                    "original_filename": resolved_name,
                     "output_filename": out_name,
                     "detected_title": ch["title"],
                     "detection_notes": ch["detection_notes"],
